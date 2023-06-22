@@ -17,7 +17,7 @@ The Car Lot Management System is a JavaFX application for managing car sales dat
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/your-username/car-lot-management-system.git`
+1. Clone the repository: `git clone https://github.com/krushildhameliya/car-lot-management-system.git`
 2. Import the project into your Java IDE.
 3. Configure the MySQL database connection in the `CarLotController` class.
 4. Add the MySQL Connector/J library to your project's dependencies.
