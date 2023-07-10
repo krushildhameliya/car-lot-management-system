@@ -15,12 +15,9 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
-import javafx.util.converter.LocalDateStringConverter;
 
 import java.net.URL;
-import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -54,10 +51,13 @@ public class CarLotController implements Initializable {
     @FXML
     private NumberAxis carCountAxis;
 
+    private CarModel carModel;
     private List<Car> cars;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        carModel = new CarModel("jdbc:mysql://localhost:3306/F22Midterm", "student", "student");
+
         initializeTableView();
         initializeBarChart();
         populateComboBox();
@@ -79,7 +79,7 @@ public class CarLotController implements Initializable {
     }
 
     private void populateComboBox() {
-        List<Integer> years = getYearsFromDatabase();
+        List<Integer> years = carModel.getYearsFromDatabase();
         yearComboBox.setItems(FXCollections.observableArrayList(years));
 
         yearComboBox.setConverter(new StringConverter<>() {
@@ -101,66 +101,12 @@ public class CarLotController implements Initializable {
         });
     }
 
-    private List<Integer> getYearsFromDatabase() {
-        List<Integer> years = new ArrayList<>();
-
-        String url = "jdbc:mysql://localhost:3306/F22Midterm";
-        String username = "student";
-        String password = "student";
-
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT DISTINCT modelYear FROM carSales");
-
-            while (resultSet.next()) {
-                int year = resultSet.getInt("modelYear");
-                years.add(year);
-            }
-
-            resultSet.close();
-            statement.close();
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return years;
-    }
-
     private void fetchCarData() {
-        String url = "jdbc:mysql://localhost:3306/F22Midterm";
-        String username = "student";
-        String password = "student";
+        cars = carModel.fetchCarData();
 
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM carSales");
-
-            cars = new ArrayList<>();
-            while (resultSet.next()) {
-                int carID = resultSet.getInt("carID");
-                int modelYear = resultSet.getInt("modelYear");
-                String make = resultSet.getString("make");
-                String model = resultSet.getString("model");
-                int price = resultSet.getInt("price");
-                LocalDate dateSold = resultSet.getDate("dateSold").toLocalDate();
-
-                Car car = new Car(carID, modelYear, make, model, price, dateSold);
-                cars.add(car);
-            }
-
-            carTableView.setItems(FXCollections.observableArrayList(cars));
-            updateBarChart(0);
-            updateLabels(cars.size(), calculateTotalSales(cars));
-
-            resultSet.close();
-            statement.close();
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        carTableView.setItems(FXCollections.observableArrayList(cars));
+        updateBarChart(0);
+        updateLabels(cars.size(), calculateTotalSales(cars));
     }
 
     private int calculateTotalSales(List<Car> cars) {
@@ -212,4 +158,3 @@ public class CarLotController implements Initializable {
         }
     }
 }
-
